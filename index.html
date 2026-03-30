@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kaalam API — Vedic Time Intelligence for Developers</title>
+  <meta name="description" content="Kaalam API brings ancient Vedic astronomical intelligence to your apps. Panchangam, planetary positions, birth charts, and more via a clean REST API." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #0b0f2e;
+      --navy-mid:   #111840;
+      --navy-light: #1a2356;
+      --indigo:     #2a3580;
+      --gold:       #d4a843;
+      --gold-light: #f0c96e;
+      --gold-pale:  #fdf3d8;
+      --amber:      #e8922a;
+      --text:       #e8ecf7;
+      --muted:      #8b92b8;
+      --border:     rgba(212, 168, 67, 0.2);
+      --card-bg:    rgba(26, 35, 86, 0.6);
+      --radius:     12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── STARS BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 40% 8%,  rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 80% 75%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 35%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 35% 55%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 30%, rgba(212,168,67,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 50%, rgba(212,168,67,0.3) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 64px;
+      background: rgba(11, 15, 46, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold-light); }
+
+    .nav-cta {
+      background: var(--gold);
+      color: var(--navy) !important;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      font-weight: 600 !important;
+    }
+
+    .nav-cta:hover { background: var(--gold-light) !important; color: var(--navy) !important; }
+
+    /* ── SECTIONS ── */
+    section { position: relative; z-index: 1; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 5%;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 64px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(42, 53, 128, 0.5) 0%, transparent 70%);
+    }
+
+    .hero-inner {
+      text-align: center;
+      padding: 5rem 0 4rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(212, 168, 67, 0.12);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-badge::before { content: '✦'; font-size: 0.7rem; }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff 30%, var(--gold-light) 70%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-tagline {
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      color: var(--gold-light);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-desc {
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold), var(--amber));
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 20px rgba(212, 168, 67, 0.35);
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-block;
+      background: transparent;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      background: rgba(212, 168, 67, 0.07);
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+      margin-top: 4rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat { text-align: center; }
+
+    .stat-num {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── SECTION HEADERS ── */
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 520px;
+    }
+
+    .section-header { margin-bottom: 3rem; }
+
+    /* ── FEATURES ── */
+    #features {
+      padding: 6rem 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(17, 24, 64, 0.6) 50%, transparent 100%);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+      backdrop-filter: blur(8px);
+    }
+
+    .feature-card:hover {
+      border-color: rgba(212, 168, 67, 0.5);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(212, 168, 67, 0.1);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(212, 168, 67, 0.12);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .feature-method {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--gold);
+      background: rgba(212, 168, 67, 0.1);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.05em;
+    }
+
+    .feature-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+      color: var(--text);
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── DEMO ── */
+    #demo {
+      padding: 6rem 0;
+    }
+
+    .demo-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .code-block {
+      background: #080c22;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      background: rgba(26, 35, 86, 0.8);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .code-dots span {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .code-dots span:nth-child(1) { background: #ff5f57; }
+    .code-dots span:nth-child(2) { background: #febc2e; }
+    .code-dots span:nth-child(3) { background: #28c840; }
+
+    .code-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .code-body {
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.75;
+      overflow-x: auto;
+      white-space: pre;
+      color: #c9d1d9;
+    }
+
+    .c-comment { color: #6e7891; }
+    .c-keyword { color: #79b8ff; }
+    .c-string  { color: #9ecbff; }
+    .c-key     { color: var(--gold-light); }
+    .c-val     { color: #85e89d; }
+    .c-num     { color: #f0a868; }
+    .c-punct   { color: #6e7891; }
+
+    /* ── PRICING ── */
+    #pricing {
+      padding: 6rem 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(17, 24, 64, 0.5) 50%, transparent 100%);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .pricing-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s, box-shadow 0.25s;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(212, 168, 67, 0.1);
+    }
+
+    .pricing-card.featured {
+      border-color: var(--gold);
+      background: rgba(26, 35, 86, 0.9);
+      position: relative;
+      box-shadow: 0 0 40px rgba(212, 168, 67, 0.15);
+    }
+
+    .featured-badge {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--gold), var(--amber));
+      color: var(--navy);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.9rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .plan-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    .plan-price span {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .plan-calls {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .plan-features {
+      list-style: none;
+      margin-bottom: 1.75rem;
+    }
+
+    .plan-features li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      padding: 0.35rem 0;
+      padding-left: 1.4rem;
+      position: relative;
+    }
+
+    .plan-features li::before {
+      content: '✦';
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-size: 0.6rem;
+      top: 0.55rem;
+    }
+
+    .plan-cta {
+      display: block;
+      text-align: center;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .plan-cta-outline {
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .plan-cta-outline:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .plan-cta-fill {
+      background: linear-gradient(135deg, var(--gold), var(--amber));
+      color: var(--navy);
+      box-shadow: 0 4px 16px rgba(212, 168, 67, 0.3);
+    }
+
+    .plan-cta-fill:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 5%;
+      text-align: center;
+      background: rgba(8, 12, 34, 0.7);
+    }
+
+    .footer-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-text {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .footer-text a {
+      color: var(--gold-light);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-text a:hover { color: var(--gold); }
+
+    .footer-divider {
+      display: inline-block;
+      margin: 0 0.5rem;
+      opacity: 0.4;
+    }
+
+    /* ── ORNAMENT ── */
+    .ornament {
+      text-align: center;
+      color: var(--gold);
+      opacity: 0.4;
+      font-size: 1.2rem;
+      letter-spacing: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+
+      .hero-stats { gap: 2rem; }
+
+      .demo-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .code-body { font-size: 0.74rem; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-ctas { flex-direction: column; align-items: center; }
+      .btn-primary, .btn-secondary { width: 100%; max-width: 280px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#">☽ Kaalam</a>
+    <ul class="nav-links">
+      <li><a href="#features">Endpoints</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="https://rapidapi.com/silentwisdom2026/api/kaalam-api" target="_blank" rel="noopener" class="nav-cta">Get API Key</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-badge">REST API &nbsp;·&nbsp; Vedic Astrology &nbsp;·&nbsp; v1.0</div>
+        <h1>Kaalam API</h1>
+        <p class="hero-tagline">Vedic time intelligence for developers</p>
+        <p class="hero-desc">
+          Harness 5,000 years of Jyotish wisdom through a clean, modern REST API.
+          Daily Panchangam, planetary positions, birth charts, muhurta timings, and
+          compatibility scores — all computed in real time, delivered in JSON.
+        </p>
+        <div class="hero-ctas">
+          <a href="https://rapidapi.com/silentwisdom2026/api/kaalam-api" target="_blank" rel="noopener" class="btn-primary">
+            Start Free on RapidAPI →
+          </a>
+          <a href="#demo" class="btn-secondary">See Live Demo</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-num">5</span>
+            <span class="stat-label">Endpoints</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">100</span>
+            <span class="stat-label">Free calls/mo</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">JSON</span>
+            <span class="stat-label">Response format</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">REST</span>
+            <span class="stat-label">Standard interface</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Endpoints</span>
+        <h2 class="section-title">Five pillars of Vedic time</h2>
+        <p class="section-sub">Every endpoint returns structured JSON you can drop straight into your calendar, astrology, or wellness app.</p>
+      </div>
+
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon">☀</div>
+          <span class="feature-method">GET /panchangam</span>
+          <h3>Daily Panchangam</h3>
+          <p>Retrieve the five sacred time elements for any date and location: Tithi (lunar day), Vara (weekday deity), Nakshatra (lunar mansion), Yoga, and Karana — the complete daily almanac of Vedic astrology.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⚠</div>
+          <span class="feature-method">GET /inauspicious-timings</span>
+          <h3>Inauspicious Timings</h3>
+          <p>Calculate Rahu Kalam, Gulika Kalam, Yamagandam, and Dur Muhurtham for any day and geographic location. Precise timestamps returned for each period so your users can plan around unfavorable windows.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">♄</div>
+          <span class="feature-method">GET /planetary-positions</span>
+          <h3>Planetary Positions</h3>
+          <p>Get real-time or historical positions of all nine Navagrahas (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu) in the Vedic sidereal zodiac, with rashi and degree precision.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">◉</div>
+          <span class="feature-method">GET /birth-chart</span>
+          <h3>Birth Chart</h3>
+          <p>Generate a complete Vedic Janma Kundali from birth date, time, and place. Returns Lagna (ascendant), Rashi chart, Navamsha, and full planetary house placements in the sidereal coordinate system.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">♥</div>
+          <span class="feature-method">GET /ashtakoota</span>
+          <h3>Ashtakoota Compatibility</h3>
+          <p>Compute the traditional eight-factor matrimonial compatibility score between two birth Nakshatras. Returns individual Kuta scores (Varna, Vashya, Tara, Yoni, Graha Maitri, Gana, Bhakut, Nadi) and the total out of 36.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section id="demo">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Live Demo</span>
+        <h2 class="section-title">Try it in seconds</h2>
+        <p class="section-sub">A standard HTTPS request is all it takes. Pass your RapidAPI key in the header and receive structured Vedic data instantly.</p>
+      </div>
+
+      <div class="demo-layout">
+
+        <!-- REQUEST -->
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="code-label">Request — cURL</span>
+          </div>
+          <div class="code-body"><span class="c-comment"># Daily Panchangam for Chennai, India</span>
+curl <span class="c-string">"https://kaalam-api.p.rapidapi.com/panchangam"</span> \
+  --get \
+  --data-urlencode <span class="c-string">"date=2024-04-14"</span> \
+  --data-urlencode <span class="c-string">"lat=13.0827"</span> \
+  --data-urlencode <span class="c-string">"lon=80.2707"</span> \
+  --data-urlencode <span class="c-string">"tz=Asia/Kolkata"</span> \
+  -H <span class="c-string">"X-RapidAPI-Key: YOUR_KEY"</span> \
+  -H <span class="c-string">"X-RapidAPI-Host: kaalam-api.p.rapidapi.com"</span></div>
+        </div>
+
+        <!-- RESPONSE -->
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="code-label">Response — JSON</span>
+          </div>
+          <div class="code-body"><span class="c-punct">{</span>
+  <span class="c-key">"date"</span><span class="c-punct">:</span> <span class="c-string">"2024-04-14"</span><span class="c-punct">,</span>
+  <span class="c-key">"location"</span><span class="c-punct">: {</span>
+    <span class="c-key">"lat"</span><span class="c-punct">:</span> <span class="c-num">13.0827</span><span class="c-punct">,</span>
+    <span class="c-key">"lon"</span><span class="c-punct">:</span> <span class="c-num">80.2707</span><span class="c-punct">,</span>
+    <span class="c-key">"tz"</span><span class="c-punct">:</span> <span class="c-string">"Asia/Kolkata"</span>
+  <span class="c-punct">},</span>
+  <span class="c-key">"tithi"</span><span class="c-punct">: {</span>
+    <span class="c-key">"name"</span><span class="c-punct">:</span> <span class="c-string">"Shukla Panchami"</span><span class="c-punct">,</span>
+    <span class="c-key">"index"</span><span class="c-punct">:</span> <span class="c-num">5</span><span class="c-punct">,</span>
+    <span class="c-key">"ends_at"</span><span class="c-punct">:</span> <span class="c-string">"19:47:32"</span>
+  <span class="c-punct">},</span>
+  <span class="c-key">"nakshatra"</span><span class="c-punct">: {</span>
+    <span class="c-key">"name"</span><span class="c-punct">:</span> <span class="c-string">"Rohini"</span><span class="c-punct">,</span>
+    <span class="c-key">"lord"</span><span class="c-punct">:</span> <span class="c-string">"Moon"</span><span class="c-punct">,</span>
+    <span class="c-key">"pada"</span><span class="c-punct">:</span> <span class="c-num">2</span>
+  <span class="c-punct">},</span>
+  <span class="c-key">"yoga"</span><span class="c-punct">:</span> <span class="c-string">"Siddha"</span><span class="c-punct">,</span>
+  <span class="c-key">"karana"</span><span class="c-punct">:</span> <span class="c-string">"Bava"</span><span class="c-punct">,</span>
+  <span class="c-key">"vara"</span><span class="c-punct">:</span> <span class="c-string">"Bhanuvara (Sunday)"</span><span class="c-punct">,</span>
+  <span class="c-key">"sunrise"</span><span class="c-punct">:</span> <span class="c-string">"06:04:11"</span><span class="c-punct">,</span>
+  <span class="c-key">"sunset"</span><span class="c-punct">:</span> <span class="c-string">"18:29:03"</span>
+<span class="c-punct">}</span></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Pricing</span>
+        <h2 class="section-title">Simple, transparent tiers</h2>
+        <p class="section-sub">All plans include access to every endpoint. Upgrade or downgrade any time through RapidAPI.</p>
+      </div>
+
+      <div class="pricing-grid">
+
+        <!-- FREE -->
+        <div class="pricing-card">
+          <div class="plan-name">Free</div>
+          <div class="plan-price">$0<span>/mo</span></div>
+          <div class="plan-calls">100 API calls / month</div>
+          <ul class="plan-features">
+            <li>All 5 endpoints</li>
+            <li>JSON responses</li>
+            <li>RapidAPI dashboard</li>
+            <li>Community support</li>
+          </ul>
+          <a href="https://rapidapi.com/silentwisdom2026/api/kaalam-api" target="_blank" rel="noopener" class="plan-cta plan-cta-outline">Get Started Free</a>
+        </div>
+
+        <!-- PRO -->
+        <div class="pricing-card featured">
+          <div class="featured-badge">Most Popular</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">$9<span>/mo</span></div>
+          <div class="plan-calls">5,000 API calls / month</div>
+          <ul class="plan-features">
+            <li>All 5 endpoints</li>
+            <li>JSON responses</li>
+            <li>RapidAPI dashboard</li>
+            <li>Email support</li>
+            <li>50× call volume</li>
+          </ul>
+          <a href="https://rapidapi.com/silentwisdom2026/api/kaalam-api" target="_blank" rel="noopener" class="plan-cta plan-cta-fill">Subscribe on RapidAPI</a>
+        </div>
+
+        <!-- ULTRA -->
+        <div class="pricing-card">
+          <div class="plan-name">Ultra</div>
+          <div class="plan-price">$29<span>/mo</span></div>
+          <div class="plan-calls">50,000 API calls / month</div>
+          <ul class="plan-features">
+            <li>All 5 endpoints</li>
+            <li>JSON responses</li>
+            <li>RapidAPI dashboard</li>
+            <li>Priority support</li>
+            <li>500× call volume</li>
+          </ul>
+          <a href="https://rapidapi.com/silentwisdom2026/api/kaalam-api" target="_blank" rel="noopener" class="plan-cta plan-cta-outline">Subscribe on RapidAPI</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">☽ Kaalam API</div>
+    <div class="ornament">✦ ✦ ✦</div>
+    <p class="footer-text">
+      Built by <a href="https://satishregeti.com" target="_blank" rel="noopener">Satish Regeti</a>
+      <span class="footer-divider">·</span>
+      <a href="https://rapidapi.com/silentwisdom2026/api/kaalam-api" target="_blank" rel="noopener">RapidAPI Listing</a>
+      <span class="footer-divider">·</span>
+      Vedic Astrology &amp; Jyotish Intelligence
+    </p>
+  </footer>
+
+</body>
+</html>
